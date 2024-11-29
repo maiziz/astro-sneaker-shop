@@ -1,0 +1,29 @@
+---
+import AddToCartButton from './AddToCartButton';
+
+interface Props {
+    id: number;
+    name: string;
+    price: number;
+    image: string;
+    category: string;
+}
+
+const product = Astro.props;
+---
+
+<div class="bg-white rounded-lg shadow-md overflow-hidden group transition-transform hover:-translate-y-1">
+    <div class="aspect-w-3 aspect-h-2 overflow-hidden">
+        <img
+            src={product.image}
+            alt={product.name}
+            class="w-full h-64 object-cover transform transition-transform group-hover:scale-105"
+        />
+    </div>
+    <div class="p-6">
+        <span class="text-sm text-primary font-medium">{product.category}</span>
+        <h3 class="text-xl font-semibold text-gray-900 mt-2">{product.name}</h3>
+        <p class="text-2xl font-bold text-gray-900 mt-2">${product.price}</p>
+        <AddToCartButton client:load product={product} />
+    </div>
+</div>

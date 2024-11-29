@@ -1,14 +1,42 @@
+---
+import CartIcon from '../components/CartIcon';
+
+interface Props {
+	title: string;
+}
+
+const { title } = Astro.props;
+---
+
 <!doctype html>
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
+		<meta name="description" content="Modern sneaker shop with the latest styles and trends" />
 		<meta name="viewport" content="width=device-width" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
+		<title>{title}</title>
 	</head>
-	<body>
-		<slot />
+	<body class="min-h-screen bg-gray-50">
+		<header class="bg-white shadow-sm sticky top-0 z-50">
+			<nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+				<a href="/" class="text-2xl font-bold text-primary">SneakerShop</a>
+				<div class="flex items-center gap-6">
+					<a href="/products" class="text-gray-600 hover:text-primary">Products</a>
+					<CartIcon client:load />
+				</div>
+			</nav>
+		</header>
+		<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+			<slot />
+		</main>
+		<footer class="bg-secondary text-white mt-auto">
+			<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+				<p class="text-center">&copy; 2024 SneakerShop. All rights reserved.</p>
+			</div>
+		</footer>
 	</body>
 </html>
 

@@ -1,0 +1,300 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { motion } from "framer-motion";
+
+// Cart functionality will be handled client-side
+---
+
+<Layout title="Shopping Cart - SneakerShop">
+	<div class="py-8" id="cart-page">
+		<h1 class="text-3xl font-bold text-gray-900 mb-8">Shopping Cart</h1>
+
+		<div class="flex flex-col lg:flex-row gap-8">
+			<!-- Cart Items -->
+			<div class="flex-1" id="cart-items">
+				<div class="bg-white rounded-lg shadow-sm divide-y" id="cart-items-container">
+					<!-- Cart items will be rendered here by JavaScript -->
+				</div>
+			</div>
+
+			<!-- Order Summary -->
+			<div class="w-full lg:w-96">
+				<div class="bg-white rounded-lg shadow-sm p-6">
+					<h2 class="text-lg font-semibold text-gray-900 mb-4">Order Summary</h2>
+					<div class="space-y-4">
+						<div class="flex justify-between">
+							<span class="text-gray-600">Subtotal</span>
+							<span class="font-medium" id="cart-subtotal">$0.00</span>
+						</div>
+						<div class="flex justify-between">
+							<span class="text-gray-600">Shipping</span>
+							<span class="font-medium" id="cart-shipping">$0.00</span>
+						</div>
+						<div class="border-t pt-4 flex justify-between">
+							<span class="font-semibold">Total</span>
+							<span class="font-bold text-xl" id="cart-total">$0.00</span>
+						</div>
+					</div>
+
+					<div class="mt-6 space-y-4">
+						<div class="bg-gray-50 p-4 rounded-md">
+							<h3 class="font-semibold text-gray-900 mb-2">Delivery Address</h3>
+							<div class="space-y-2">
+								<input
+									type="text"
+									placeholder="Street Address"
+									class="w-full px-3 py-2 border rounded-md"
+									id="street-address"
+								/>
+								<input
+									type="text"
+									placeholder="City"
+									class="w-full px-3 py-2 border rounded-md"
+									id="city"
+								/>
+								<input
+									type="text"
+									placeholder="Phone Number"
+									class="w-full px-3 py-2 border rounded-md"
+									id="phone"
+								/>
+							</div>
+						</div>
+
+						<div class="bg-gray-50 p-4 rounded-md">
+							<h3 class="font-semibold text-gray-900 mb-2">Payment Method</h3>
+							<div class="flex items-center gap-2">
+								<input
+									type="radio"
+									id="cod"
+									name="payment"
+									value="cod"
+									checked
+									class="text-primary focus:ring-primary"
+								/>
+								<label for="cod" class="text-gray-700">Cash on Delivery</label>
+							</div>
+							<p class="mt-2 text-sm text-gray-500">
+								Pay with cash when your order is delivered to your doorstep.
+							</p>
+						</div>
+
+						<button
+							id="place-order"
+							class="w-full bg-primary text-white py-3 px-4 rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+						>
+							Place Order
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</Layout>
+
+<script>
+	import { cartItems, updateQuantity, removeFromCart, getCartTotal } from '../store/cartStore';
+	import { animate } from 'motion';
+
+	function updateOrderSummary() {
+		const subtotal = getCartTotal();
+		const shipping = subtotal > 0 ? 10 : 0; // Only add shipping if cart is not empty
+		const total = subtotal + shipping;
+
+		document.getElementById('cart-subtotal').textContent = `$${subtotal.toFixed(2)}`;
+		document.getElementById('cart-shipping').textContent = `$${shipping.toFixed(2)}`;
+		document.getElementById('cart-total').textContent = `$${total.toFixed(2)}`;
+	}
+
+	function updateCart() {
+		const container = document.getElementById('cart-items-container');
+		const items = cartItems.get();
+		
+		if (!container) return;
+		
+		if (items.length === 0) {
+			container.innerHTML = `
+				<div class="text-center py-12">
+					<p class="text-gray-500">Your cart is empty</p>
+					<a href="/products" class="mt-4 inline-block text-primary hover:underline">
+						Continue Shopping
+					</a>
+				</div>
+			`;
+		} else {
+			container.innerHTML = items.map((item, index) => `
+				<div class="p-6 flex items-center gap-6 cart-item" data-index="${index}">
+					<img
+						src="${item.image}"
+						alt="${item.name}"
+						class="w-24 h-24 object-cover rounded-md"
+					/>
+					<div class="flex-1">
+						<h3 class="text-lg font-semibold text-gray-900">${item.name}</h3>
+						<p class="text-xl font-bold text-gray-900 mt-1">$${item.price.toFixed(2)}</p>
+						<div class="mt-2 flex items-center gap-2">
+							<button class="quantity-btn px-2 py-1 bg-gray-100 rounded hover:bg-gray-200" data-action="decrease" data-id="${item.id}">-</button>
+							<span class="px-4 py-1 border rounded-md">${item.quantity}</span>
+							<button class="quantity-btn px-2 py-1 bg-gray-100 rounded hover:bg-gray-200" data-action="increase" data-id="${item.id}">+</button>
+						</div>
+						<p class="text-sm text-gray-500 mt-1">Total: $${(item.price * item.quantity).toFixed(2)}</p>
+					</div>
+					<button 
+						class="remove-item text-gray-400 hover:text-red-500" 
+						data-id="${item.id}"
+						type="button"
+						aria-label="Remove item"
+					>
+						<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+						</svg>
+					</button>
+				</div>
+			`).join('');
+
+			// Add animation to new items
+			document.querySelectorAll('.cart-item').forEach((item, index) => {
+				animate(
+					item,
+					{ opacity: [0, 1], y: [20, 0] },
+					{ delay: index * 0.1, duration: 0.3 }
+				);
+			});
+		}
+
+		// Update order summary
+		updateOrderSummary();
+	}
+
+	// Initial cart update
+	updateCart();
+
+	// Subscribe to cart changes
+	cartItems.subscribe(() => {
+		updateCart();
+	});
+
+	// Event delegation for cart actions
+	document.getElementById('cart-items-container')?.addEventListener('click', async (e) => {
+		const target = e.target as HTMLElement;
+		const quantityBtn = target.closest('.quantity-btn');
+		const removeBtn = target.closest('.remove-item');
+
+		if (quantityBtn) {
+			const id = parseInt(quantityBtn.getAttribute('data-id') || '0');
+			const action = quantityBtn.getAttribute('data-action');
+			const item = cartItems.get().find(item => item.id === id);
+			
+			if (item) {
+				const newQuantity = action === 'increase' ? item.quantity + 1 : item.quantity - 1;
+				if (newQuantity > 0) {
+					updateQuantity(id, newQuantity);
+				} else {
+					const itemElement = quantityBtn.closest('.cart-item');
+					if (itemElement) {
+						await animate(
+							itemElement,
+							{ opacity: 0, height: 0 },
+							{ duration: 0.3 }
+						).finished;
+						removeFromCart(id);
+					}
+				}
+			}
+		}
+
+		if (removeBtn) {
+			const id = parseInt(removeBtn.getAttribute('data-id') || '0');
+			const itemElement = removeBtn.closest('.cart-item');
+			
+			if (itemElement) {
+				try {
+					await animate(
+						itemElement,
+						{ opacity: 0, height: 0 },
+						{ duration: 0.3 }
+					).finished;
+					removeFromCart(id);
+				} catch (error) {
+					console.error('Error removing item:', error);
+				}
+			}
+		}
+	});
+
+	// Handle order placement
+	document.getElementById('place-order')?.addEventListener('click', async (e) => {
+		const button = e.target as HTMLButtonElement;
+		const originalText = button.textContent;
+		
+		const streetAddress = (document.getElementById('street-address') as HTMLInputElement)?.value;
+		const city = (document.getElementById('city') as HTMLInputElement)?.value;
+		const phone = (document.getElementById('phone') as HTMLInputElement)?.value;
+
+		if (!streetAddress || !city || !phone) {
+			alert('Please fill in all delivery details');
+			return;
+		}
+
+		const items = cartItems.get();
+		if (items.length === 0) {
+			alert('Your cart is empty');
+			return;
+		}
+
+		// Disable button and show loading state
+		button.disabled = true;
+		button.textContent = 'Processing...';
+
+		try {
+			const orderDetails = {
+				items,
+				total: getCartTotal() + 10,
+				delivery: {
+					streetAddress,
+					city,
+					phone
+				},
+				paymentMethod: 'Cash on Delivery'
+			};
+
+			// Here you would typically send this to your backend
+			console.log('Order placed:', orderDetails);
+			
+			// Show success message
+			const cartPage = document.getElementById('cart-page');
+			if (cartPage) {
+				await animate(
+					cartPage,
+					{ opacity: 0 },
+					{ duration: 0.3 }
+				).finished;
+
+				cartPage.innerHTML = `
+					<div class="text-center py-12">
+						<svg class="mx-auto h-12 w-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+						</svg>
+						<h2 class="mt-4 text-2xl font-bold text-gray-900">Order Placed Successfully!</h2>
+						<p class="mt-2 text-gray-600">Thank you for your order. Our team will contact you shortly.</p>
+						<a href="/products" class="mt-6 inline-block text-primary hover:underline">
+							Continue Shopping
+						</a>
+					</div>
+				`;
+				
+				animate(cartPage, { opacity: 1 }, { duration: 0.3 });
+				
+				// Clear cart
+				cartItems.set([]);
+			}
+		} catch (error) {
+			console.error('Error placing order:', error);
+			alert('There was an error placing your order. Please try again.');
+			
+			// Reset button state
+			button.disabled = false;
+			button.textContent = originalText;
+		}
+	});
+</script>

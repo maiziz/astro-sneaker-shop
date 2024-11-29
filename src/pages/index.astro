@@ -1,11 +1,88 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+const featuredProducts = [
+	{
+		id: 1,
+		name: 'Air Max Classic',
+		price: 129.99,
+		image: '/images/sneaker1.jpg',
+		category: 'Running'
+	},
+	{
+		id: 2,
+		name: 'Ultra Boost Pro',
+		price: 159.99,
+		image: '/images/sneaker2.jpg',
+		category: 'Lifestyle'
+	},
+	{
+		id: 3,
+		name: 'Street Legend',
+		price: 89.99,
+		image: '/images/sneaker3.jpg',
+		category: 'Street Style'
+	}
+];
 ---
 
-<Layout>
-	<Welcome />
+<Layout title="SneakerShop - Latest Sneakers Collection">
+	<section class="py-12">
+		<div class="text-center mb-12">
+			<h1 class="text-4xl font-bold text-gray-900 mb-4">Welcome to SneakerShop</h1>
+			<p class="text-lg text-gray-600 max-w-2xl mx-auto">
+				Discover the latest trends in sneaker fashion. From classic styles to modern designs,
+				find your perfect pair with easy cash on delivery.
+			</p>
+		</div>
+	</section>
+
+	<section class="py-12 bg-white">
+		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+			<h2 class="text-3xl font-bold text-gray-900 mb-8">Featured Products</h2>
+			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+				{featuredProducts.map((product) => (
+					<div class="bg-white rounded-lg shadow-md overflow-hidden">
+						<div class="aspect-w-3 aspect-h-2">
+							<img
+								src={product.image}
+								alt={product.name}
+								class="w-full h-64 object-cover"
+							/>
+						</div>
+						<div class="p-6">
+							<span class="text-sm text-primary font-medium">{product.category}</span>
+							<h3 class="text-xl font-semibold text-gray-900 mt-2">{product.name}</h3>
+							<p class="text-2xl font-bold text-gray-900 mt-2">${product.price}</p>
+							<button class="mt-4 w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 transition-colors">
+								Add to Cart
+							</button>
+						</div>
+					</div>
+				))}
+			</div>
+		</div>
+	</section>
+
+	<section class="py-12 bg-gray-50">
+		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+			<div class="text-center">
+				<h2 class="text-3xl font-bold text-gray-900 mb-4">Why Choose Us?</h2>
+				<div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
+					<div class="p-6">
+						<h3 class="text-xl font-semibold mb-2">Cash on Delivery</h3>
+						<p class="text-gray-600">Pay when you receive your sneakers at your doorstep</p>
+					</div>
+					<div class="p-6">
+						<h3 class="text-xl font-semibold mb-2">Authentic Products</h3>
+						<p class="text-gray-600">100% genuine products from authorized sellers</p>
+					</div>
+					<div class="p-6">
+						<h3 class="text-xl font-semibold mb-2">Easy Returns</h3>
+						<p class="text-gray-600">30-day hassle-free return policy</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
 </Layout>

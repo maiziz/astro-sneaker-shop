@@ -1,0 +1,228 @@
+---
+import Layout from '../layouts/Layout.astro';
+import AddToCartButton from '../components/AddToCartButton';
+
+const products = [
+	{
+		id: 1,
+		name: 'Air Max Classic',
+		price: 129.99,
+		image: '/images/sneaker1.jpg',
+		category: 'Running'
+	},
+	{
+		id: 2,
+		name: 'Ultra Boost Pro',
+		price: 159.99,
+		image: '/images/sneaker2.jpg',
+		category: 'Lifestyle'
+	},
+	{
+		id: 3,
+		name: 'Street Legend',
+		price: 89.99,
+		image: '/images/sneaker3.jpg',
+		category: 'Street Style'
+	},
+	{
+		id: 4,
+		name: 'Cloud Runner',
+		price: 119.99,
+		image: '/images/sneaker4.jpg',
+		category: 'Running'
+	},
+	{
+		id: 5,
+		name: 'Urban Classic',
+		price: 99.99,
+		image: '/images/sneaker5.jpg',
+		category: 'Lifestyle'
+	},
+	{
+		id: 6,
+		name: 'Sport Elite',
+		price: 149.99,
+		image: '/images/sneaker6.jpg',
+		category: 'Sport'
+	}
+];
+
+const categories = [...new Set(products.map(product => product.category))];
+
+---
+
+<Layout title="Products - SneakerShop">
+	<div class="py-8">
+		<h1 class="text-3xl font-bold text-gray-900 mb-8">Our Products</h1>
+		<div class="flex flex-col md:flex-row gap-8">
+			<!-- Filters -->
+			<div class="w-full md:w-64 bg-white p-6 rounded-lg shadow-sm h-fit">
+				<h2 class="font-semibold text-lg mb-4">Categories</h2>
+				<div class="space-y-2">
+					{categories.map(category => (
+						<label class="flex items-center space-x-2">
+							<input 
+								type="checkbox" 
+								value={category}
+								class="rounded text-primary focus:ring-primary category-filter" 
+							/>
+							<span class="text-gray-700">{category}</span>
+						</label>
+					))}
+				</div>
+				
+				<div class="mt-6">
+					<h2 class="font-semibold text-lg mb-4">Price Range</h2>
+					<div class="space-y-4">
+						<div>
+							<label class="text-sm text-gray-600">Min Price</label>
+							<input 
+								type="number" 
+								id="min-price"
+								class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary" 
+								placeholder="0" 
+							/>
+						</div>
+						<div>
+							<label class="text-sm text-gray-600">Max Price</label>
+							<input 
+								type="number" 
+								id="max-price"
+								class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary" 
+								placeholder="1000" 
+							/>
+						</div>
+					</div>
+				</div>
+
+				<button 
+					id="apply-filters"
+					class="mt-6 w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 transition-colors"
+				>
+					Apply Filters
+				</button>
+
+				<button 
+					id="reset-filters"
+					class="mt-2 w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-200 transition-colors"
+				>
+					Reset Filters
+				</button>
+			</div>
+
+			<!-- Product Grid -->
+			<div class="flex-1">
+				<div id="products-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+					{products.map(product => (
+						<div 
+							class="product-card bg-white rounded-lg shadow-md overflow-hidden" 
+							data-category={product.category}
+							data-price={product.price}
+						>
+							<div class="aspect-w-3 aspect-h-2">
+								<img
+									src={product.image}
+									alt={product.name}
+									class="w-full h-64 object-cover"
+								/>
+							</div>
+							<div class="p-6">
+								<span class="text-sm text-primary font-medium">{product.category}</span>
+								<h3 class="text-xl font-semibold text-gray-900 mt-2">{product.name}</h3>
+								<p class="text-2xl font-bold text-gray-900 mt-2">${product.price}</p>
+								<AddToCartButton client:load product={product} />
+							</div>
+						</div>
+					))}
+				</div>
+
+				<div id="no-results" class="hidden text-center py-12">
+					<p class="text-gray-500">No products match your filters</p>
+					<button id="clear-filters" class="mt-4 text-primary hover:underline">Clear Filters</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</Layout>
+
+<script>
+	function filterProducts() {
+		const selectedCategories = Array.from(document.querySelectorAll('.category-filter:checked'))
+			.map(checkbox => (checkbox as HTMLInputElement).value);
+		
+		const minPrice = parseFloat((document.getElementById('min-price') as HTMLInputElement).value) || 0;
+		const maxPrice = parseFloat((document.getElementById('max-price') as HTMLInputElement).value) || Infinity;
+		
+		const productCards = document.querySelectorAll('.product-card');
+		let visibleProducts = 0;
+
+		productCards.forEach(card => {
+			const category = card.getAttribute('data-category');
+			const price = parseFloat(card.getAttribute('data-price') || '0');
+			
+			const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(category || '');
+			const matchesPrice = price >= minPrice && price <= maxPrice;
+			
+			if (matchesCategory && matchesPrice) {
+				(card as HTMLElement).style.display = 'block';
+				visibleProducts++;
+			} else {
+				(card as HTMLElement).style.display = 'none';
+			}
+		});
+
+		// Show/hide no results message
+		const noResults = document.getElementById('no-results');
+		const productsGrid = document.getElementById('products-grid');
+		
+		if (noResults && productsGrid) {
+			if (visibleProducts === 0) {
+				noResults.classList.remove('hidden');
+				productsGrid.classList.add('hidden');
+			} else {
+				noResults.classList.add('hidden');
+				productsGrid.classList.remove('hidden');
+			}
+		}
+	}
+
+	function resetFilters() {
+		// Uncheck all category checkboxes
+		document.querySelectorAll('.category-filter').forEach(checkbox => {
+			(checkbox as HTMLInputElement).checked = false;
+		});
+
+		// Reset price inputs
+		const minPrice = document.getElementById('min-price') as HTMLInputElement;
+		const maxPrice = document.getElementById('max-price') as HTMLInputElement;
+		if (minPrice) minPrice.value = '';
+		if (maxPrice) maxPrice.value = '';
+
+		// Show all products
+		document.querySelectorAll('.product-card').forEach(card => {
+			(card as HTMLElement).style.display = 'block';
+		});
+
+		// Hide no results message
+		const noResults = document.getElementById('no-results');
+		const productsGrid = document.getElementById('products-grid');
+		
+		if (noResults && productsGrid) {
+			noResults.classList.add('hidden');
+			productsGrid.classList.remove('hidden');
+		}
+	}
+
+	// Add event listeners
+	document.getElementById('apply-filters')?.addEventListener('click', filterProducts);
+	document.getElementById('reset-filters')?.addEventListener('click', resetFilters);
+	document.getElementById('clear-filters')?.addEventListener('click', resetFilters);
+
+	// Add event listeners for instant filtering
+	document.querySelectorAll('.category-filter').forEach(checkbox => {
+		checkbox.addEventListener('change', filterProducts);
+	});
+
+	document.getElementById('min-price')?.addEventListener('input', filterProducts);
+	document.getElementById('max-price')?.addEventListener('input', filterProducts);
+</script>
